@@ -43,6 +43,7 @@ func (p *Peer) StartListening() {
 	}
 }
 
+// Handler for /connect command
 func (p *Peer) ConnectTo(addr string) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
