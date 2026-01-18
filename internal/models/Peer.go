@@ -15,6 +15,16 @@ type Peer struct {
 	Mu         sync.Mutex
 }
 
+func (p *Peer) GetPeers() {
+	fmt.Printf("All peers connected: \n")
+	var ind int = 1
+
+	for peer := range p.Peers {
+		fmt.Printf("%d. %s\n", ind, peer.RemoteAddr())
+		ind++
+	}
+}
+
 func (p *Peer) StartListening() {
 	ln, err := net.Listen("tcp", p.ListenAddr)
 	if err != nil {
@@ -72,7 +82,7 @@ func (p *Peer) readLoop(conn net.Conn) {
 			break
 		}
 
-		fmt.Printf("\n[Message from %s]: %s\n", conn.RemoteAddr(), msg)
+		fmt.Printf("[%s]: %s", conn.RemoteAddr(), msg)
 	}
 }
 

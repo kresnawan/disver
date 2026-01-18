@@ -28,6 +28,8 @@ func main() {
 		if strings.HasPrefix(text, "/connect") {
 			addr := strings.TrimPrefix(text, "/connect ")
 			go peer.ConnectTo(addr)
+		} else if strings.HasPrefix(text, "/getall") {
+			peer.GetPeers()
 		} else {
 			peer.Broadcast(text)
 		}
