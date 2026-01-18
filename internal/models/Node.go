@@ -5,6 +5,6 @@ import (
 )
 
 type Node struct {
-	ID   types.ID
-	Addr string
+	ID   types.ID `json:"id"`
+	Addr string   `json:"addr"`
 }

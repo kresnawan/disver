@@ -2,6 +2,8 @@ package models
 
 import (
 	"bufio"
+	"disver/internal/types"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -10,9 +12,11 @@ import (
 )
 
 type Peer struct {
+	Id         types.ID
 	ListenAddr string
 	Peers      map[net.Conn]bool
 	Mu         sync.Mutex
+	Rt         RoutingTable
 }
 
 func (p *Peer) GetPeers() {
@@ -39,7 +43,7 @@ func (p *Peer) StartListening() {
 			continue
 		}
 
-		p.handleAddPeer(conn)
+		go p.handleAddPeer(conn)
 	}
 }
 
@@ -95,6 +99,40 @@ func (p *Peer) Broadcast(msg string) {
 		_, err := peer.Write([]byte(msg + "\n"))
 		if err != nil {
 			log.Printf("Failed to write to %s\n", peer.RemoteAddr())
+		}
+	}
+}
+
+/* FUNGSI DIBAWAH MASIH DALAM TAHAP PENGEMBANGAN DAN BELUM BEKERJA */
+/* PENGGUNAAN PROTOKOL UDP DALAM SISTEM INI MASIH DALAM TAHAP EKSPERIMENTAL */
+
+func (p *Peer) handleUDPMessage(conn *net.UDPConn, addr *net.UDPAddr, msg RPCMessage) {
+	switch msg.Type {
+
+	/* Handle permintaan list node, */
+	/* dan mengirim ke node tertentu, nodes yang kita punya */
+	case FIND_NODE:
+		closest := p.Rt.GetClosestPeers(msg.Target.ID, 20)
+
+		response := RPCMessage{
+			Type:    FIND_NODE_RESPONSE,
+			Sender:  p.Id,
+			Payload: closest,
+		}
+
+		data, err := json.Marshal(response)
+
+		if err != nil {
+			log.Println(err.Error())
+		}
+
+		conn.WriteToUDP(data, addr)
+
+	/* Handle pemberian list nodes dari node lain, */
+	/* Dan menambahkan pada RoutingTable yang kita punya */
+	case FIND_NODE_RESPONSE:
+		for _, node := range msg.Payload {
+			p.Rt.AddPeer(node)
 		}
 	}
 }
