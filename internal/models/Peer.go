@@ -2,7 +2,7 @@ package models
 
 import (
 	"bufio"
-	"disver/internal/types"
+	"disver/init/id"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,8 +12,9 @@ import (
 )
 
 type Peer struct {
-	Id         types.ID
+	Node       Node
 	ListenAddr string
+	UDPAddress net.UDPAddr
 	Peers      map[net.Conn]bool
 	Mu         sync.Mutex
 	Rt         RoutingTable
@@ -30,20 +31,90 @@ func (p *Peer) GetPeers() {
 }
 
 func (p *Peer) StartListening() {
-	ln, err := net.Listen("tcp", p.ListenAddr)
+
+	ln, err := net.ListenUDP("udp", &p.UDPAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("Listening for peers on %s\n", p.ListenAddr)
+	/* Generating self ID by public key */
+	id := id.PublicKeyToNodeId()
+	p.Node.ID = id
+	p.Node.Addr = ln.LocalAddr().String()
 
+	defer ln.Close()
+
+	log.Printf("UDP node peers on %s\n", p.ListenAddr)
+	buf := make([]byte, 1024)
+
+	/* Listening loop */
 	for {
-		conn, err := ln.Accept()
+
+		n, remoteAddr, err := ln.ReadFromUDP(buf)
+
 		if err != nil {
-			continue
+			log.Println("Error reading: ", err)
 		}
 
-		go p.handleAddPeer(conn)
+		go func(data []byte, from net.UDPAddr) {
+			var msg RPCMessage
+			if err := json.Unmarshal(data, &msg); err != nil {
+				return
+			}
+
+			p.handleUDPMessage(ln, remoteAddr, msg)
+
+		}(buf[:n], *remoteAddr)
+	}
+}
+
+/* FUNGSI DIBAWAH MASIH DALAM TAHAP PENGEMBANGAN DAN BELUM BEKERJA */
+/* PENGGUNAAN PROTOKOL UDP DALAM SISTEM INI MASIH DALAM TAHAP EKSPERIMENTAL */
+
+func (p *Peer) handleUDPMessage(conn *net.UDPConn, addr *net.UDPAddr, msg RPCMessage) {
+	switch msg.Type {
+
+	case PING:
+		response := RPCMessage{
+			Type:   PONG,
+			Sender: p.Node,
+			Target: msg.Sender,
+		}
+
+		responseJSON, err := json.Marshal(response)
+
+		if err != nil {
+			log.Println("Error sending Pong message: ", err)
+		}
+
+		conn.WriteToUDP(responseJSON, addr)
+
+	/* Handle permintaan list node, */
+	/* dan mengirim ke node tertentu, nodes yang kita punya */
+	case FIND_NODE:
+		closest := p.Rt.GetClosestPeers(msg.Target.ID, 20)
+
+		response := RPCMessage{
+			Type:    FIND_NODE_RESPONSE,
+			Sender:  p.Node,
+			Target:  msg.Sender,
+			Payload: closest,
+		}
+
+		data, err := json.Marshal(response)
+
+		if err != nil {
+			log.Println(err.Error())
+		}
+
+		conn.WriteToUDP(data, addr)
+
+	/* Handle pemberian list nodes dari node lain, */
+	/* Dan menambahkan pada RoutingTable yang kita punya */
+	case FIND_NODE_RESPONSE:
+		for _, node := range msg.Payload {
+			p.Rt.AddPeer(node)
+		}
 	}
 }
 
@@ -99,40 +170,6 @@ func (p *Peer) Broadcast(msg string) {
 		_, err := peer.Write([]byte(msg + "\n"))
 		if err != nil {
 			log.Printf("Failed to write to %s\n", peer.RemoteAddr())
-		}
-	}
-}
-
-/* FUNGSI DIBAWAH MASIH DALAM TAHAP PENGEMBANGAN DAN BELUM BEKERJA */
-/* PENGGUNAAN PROTOKOL UDP DALAM SISTEM INI MASIH DALAM TAHAP EKSPERIMENTAL */
-
-func (p *Peer) handleUDPMessage(conn *net.UDPConn, addr *net.UDPAddr, msg RPCMessage) {
-	switch msg.Type {
-
-	/* Handle permintaan list node, */
-	/* dan mengirim ke node tertentu, nodes yang kita punya */
-	case FIND_NODE:
-		closest := p.Rt.GetClosestPeers(msg.Target.ID, 20)
-
-		response := RPCMessage{
-			Type:    FIND_NODE_RESPONSE,
-			Sender:  p.Id,
-			Payload: closest,
-		}
-
-		data, err := json.Marshal(response)
-
-		if err != nil {
-			log.Println(err.Error())
-		}
-
-		conn.WriteToUDP(data, addr)
-
-	/* Handle pemberian list nodes dari node lain, */
-	/* Dan menambahkan pada RoutingTable yang kita punya */
-	case FIND_NODE_RESPONSE:
-		for _, node := range msg.Payload {
-			p.Rt.AddPeer(node)
 		}
 	}
 }
