@@ -12,4 +12,4 @@ while getopts "p:h" opt; do
 done
 
 
-go run $PWD/cmd/api -port=$PORT
+go run $PWD/cmd/node -port=$PORT

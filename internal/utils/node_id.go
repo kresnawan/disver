@@ -1,17 +1,17 @@
-package id
+package utils
 
 import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/sha256"
-	"disver/internal/types"
+	"disver/pkg/types"
 	"encoding/hex"
 	"errors"
 	"log"
 	"os"
 )
 
-func PublicKeyToNodeId() types.ID {
+func GenerateNodeId() types.ID {
 	log.Printf("Looking for public key for Node ID..")
 	data, err := os.ReadFile("./internal/identity/ed25519.pub")
 	var publicKey string

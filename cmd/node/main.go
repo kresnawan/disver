@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"disver/internal/handlers"
+	"disver/internal/rpc"
 	"flag"
 	"fmt"
 	"os"
@@ -16,7 +16,7 @@ func main() {
 	config := flag.String("config", "config1", "Peer config")
 	flag.Parse()
 
-	peer := handlers.NewPeer(*listenAddr)
+	peer := rpc.NewPeer(*listenAddr)
 
 	go peer.StartListening()
 
@@ -30,7 +30,5 @@ func main() {
 			addr := strings.TrimPrefix(text, "/ping ")
 			peer.SendPINGMessage(addr)
 		}
-
-		fmt.Print("> ")
 	}
 }
