@@ -2,38 +2,62 @@ package id
 
 import (
 	"crypto/ed25519"
+	"crypto/rand"
 	"crypto/sha256"
 	"disver/internal/types"
-	"encoding/base64"
+	"encoding/hex"
+	"errors"
 	"log"
 	"os"
-	"strings"
 )
 
 func PublicKeyToNodeId() types.ID {
-	data, err := os.ReadFile("~/.ssh/id_ed25519.pub")
+	data, err := os.ReadFile("./internal/identity/ed25519.pub")
+	var publicKey string
 
 	if err != nil {
-		log.Println("Error reading private key: ", err)
+		if errors.Is(err, os.ErrNotExist) {
+			log.Println("Public key didn't created yet, creating one..")
+			privKey, pubKey := generateKey()
+
+			err := os.WriteFile("./internal/identity/ed25519", []byte(privKey), 0600)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = os.WriteFile("./internal/identity/ed25519.pub", []byte(pubKey), 0600)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			publicKey = pubKey
+		} else {
+			log.Fatal(err)
+		}
+	} else {
+		log.Println("Public key found")
+		publicKey = string(data)
 	}
 
-	parts := strings.Split(string(data), " ")
-	if len(parts) != 2 {
-		log.Println("Public key invalid: ", err)
-
-	}
-
-	keyData, err := base64.StdEncoding.DecodeString(parts[1])
-
-	if err != nil {
-		log.Println("Error encoding public key: ", err)
-	}
-
-	pubkey := ed25519.PublicKey(keyData[len(keyData)-32:])
-	hash := sha256.Sum256(pubkey)
+	hash := sha256.Sum256([]byte(publicKey))
 	var id types.ID
 
 	copy(id[:], hash[:20])
 
 	return id
+}
+
+func generateKey() (string, string) {
+	pubKey, privKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	privKeyString := hex.EncodeToString(privKey)
+	pubKeyString := hex.EncodeToString(pubKey)
+
+	return privKeyString, pubKeyString
+
 }
