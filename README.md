@@ -5,7 +5,7 @@ This program is currently written in Go and utilizing the UDP protocol, every co
 <br><br>
 Currently on work :
 <br>
-- DHT (Distribution Hash Table)
+- DHT (Distributed Hash Table)
 - RPC message handling
 - Organizing the project directory structure
 - Everything beyond will be listed as the project grows
