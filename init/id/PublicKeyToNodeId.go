@@ -12,6 +12,7 @@ import (
 )
 
 func PublicKeyToNodeId() types.ID {
+	log.Printf("Looking for public key for Node ID..")
 	data, err := os.ReadFile("./internal/identity/ed25519.pub")
 	var publicKey string
 
