@@ -1,16 +1,13 @@
 package main
 
 import (
-	"bufio"
+	"disver/internal/cli"
 	"disver/internal/rpc"
 	"flag"
-	"fmt"
-	"os"
-	"strings"
 )
 
 func main() {
-	// test()
+	// main_test()
 
 	listenAddr := flag.String("port", ":3000", "The address to listen on")
 	config := flag.String("config", "config1", "Peer config")
@@ -20,15 +17,5 @@ func main() {
 
 	go peer.StartListening()
 
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Printf("Commands: '/ping [addr] to send ping message'. config: %s\n", *config)
-
-	for scanner.Scan() {
-		text := scanner.Text()
-
-		if strings.HasPrefix(text, "/ping") {
-			addr := strings.TrimPrefix(text, "/ping ")
-			peer.SendPINGMessage(addr)
-		}
-	}
+	cli.StartTerminal(config, peer)
 }
