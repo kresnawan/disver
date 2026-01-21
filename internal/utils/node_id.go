@@ -43,11 +43,8 @@ func GenerateNodeId() types.ID {
 	}
 
 	hash := sha256.Sum256([]byte(publicKey))
-	var id types.ID
 
-	copy(id[:], hash[:20])
-
-	return id
+	return hash
 }
 
 func generateKey() (string, string) {
