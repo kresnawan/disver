@@ -1,19 +1,18 @@
-package rpc
+package host
 
 import (
-	"disver/internal/host"
 	"log"
 	"net"
 )
 
-func NewPeer(listenAddr string) *host.Host {
+func NewPeer(listenAddr string) *Host {
 
 	addr, err := net.ResolveUDPAddr("udp", listenAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return &host.Host{
+	return &Host{
 		ListenAddr: listenAddr,
 		UDPAddress: *addr,
 		Peers:      make(map[net.Conn]bool),

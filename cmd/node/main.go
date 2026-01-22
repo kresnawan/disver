@@ -2,7 +2,7 @@ package main
 
 import (
 	"disver/internal/cli"
-	"disver/internal/rpc"
+	"disver/internal/host"
 	"flag"
 )
 
@@ -13,7 +13,7 @@ func main() {
 	config := flag.String("config", "config1", "Peer config")
 	flag.Parse()
 
-	peer := rpc.NewPeer(*listenAddr)
+	peer := host.NewPeer(*listenAddr)
 
 	go peer.StartListening()
 

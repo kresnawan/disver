@@ -1,8 +1,7 @@
 package host
 
 import (
-	"disver/internal/utils"
-	"disver/pkg/protocol"
+	"disver/internal/crypto"
 	"disver/pkg/types"
 	"encoding/json"
 	"fmt"
@@ -18,7 +17,8 @@ type Host struct {
 	Peers      map[net.Conn]bool
 	Mu         sync.Mutex
 	Rt         types.RoutingTable
-	Conn       *net.UDPConn
+	UDPConn    *net.UDPConn
+	TCPConn    *net.TCPConn
 }
 
 func (p *Host) GetPeers() {
@@ -38,10 +38,10 @@ func (p *Host) StartListening() {
 		log.Fatal(err)
 	}
 
-	p.Conn = ln
+	p.UDPConn = ln
 
 	/* Generating self ID by public key */
-	id := utils.GenerateNodeId()
+	id := crypto.GenerateNodeId()
 	p.Node.ID = id
 	p.Node.Addr = ln.LocalAddr().String()
 
@@ -60,7 +60,7 @@ func (p *Host) StartListening() {
 		}
 
 		go func(data []byte, from net.UDPAddr) {
-			var msg protocol.RPCMessage
+			var msg types.RPCMessage
 			if err := json.Unmarshal(data, &msg); err != nil {
 				return
 			}
@@ -73,12 +73,12 @@ func (p *Host) StartListening() {
 
 /** Message handler */
 
-func (p *Host) handleUDPMessage(conn *net.UDPConn, addr *net.UDPAddr, msg protocol.RPCMessage) {
+func (p *Host) handleUDPMessage(conn *net.UDPConn, addr *net.UDPAddr, msg types.RPCMessage) {
 	switch msg.Type {
 
 	case types.PING:
 		fmt.Printf("Received ping message from %s, sending pong..\n", addr.String())
-		response := protocol.RPCMessage{
+		response := types.RPCMessage{
 			Type:   types.PONG,
 			Sender: p.Node,
 			Target: msg.Sender,
@@ -107,7 +107,7 @@ func (p *Host) SendPINGMessage(addr string) {
 	var senderNode types.Node = types.Node{
 		Addr: addr,
 	}
-	var msg protocol.RPCMessage = protocol.RPCMessage{
+	var msg types.RPCMessage = types.RPCMessage{
 		Sender: p.Node,
 		Target: senderNode,
 		Type:   types.PING,
@@ -118,7 +118,7 @@ func (p *Host) SendPINGMessage(addr string) {
 		log.Fatal(err)
 	}
 
-	n, err := p.Conn.WriteToUDP(jsonMsg, address)
+	n, err := p.UDPConn.WriteToUDP(jsonMsg, address)
 
 	if err != nil {
 		log.Fatal(err)
