@@ -9,7 +9,7 @@ Nowadays, Web3 is mostly seen as cryptocurrency-related stuff, or gambling, or s
 
 The commitment to not use opinionated dependency (like libp2p) is to push ourselves to not just knowing what it is but also knowing how does it work under the hood.<br><br>
 
-For more info and technical-related stuff before contributing, refer to [docs]("https://github.com/kresnawan/disver/tree/main/docs")
+For more info and technical-related stuff before contributing, refer to [docs](https://github.com/kresnawan/disver/tree/main/docs)
 <!-- Currently on work :
 <br>
 - DHT (Distributed Hash Table)
