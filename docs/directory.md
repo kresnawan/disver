@@ -2,7 +2,7 @@
 
 The graph below will give you an idea how this project is structured. The structure will constantly evolving as the project grows so, be sure to check the last commit datetime compared to this document's last changed to prevent confusion.<br>
 <br>
-(2026/01/22 17:43 UTC+7)
+(2026/01/23 00:57 UTC+07)
 
 ```bash
 .
@@ -10,18 +10,14 @@ The graph below will give you an idea how this project is structured. The struct
 │   ├── build/       # Binary executable
 │   └── node/        # Entry point
 ├── config/          
-│   └── disver.toml  # Peer config (self)
+│   └── disver.toml  # Peer (self) config 
 ├── docs/            # Project documentation
 ├── internal/
 │   ├── cli/         # Front-end (CLI)
+│   ├── crypto/      # Cryptography-related 
 │   ├── crypto_rust/ # Rust directory
-│   ├── host/        # Peer (self) struct
-│   ├── rpc/         # Message handling
-│   └── utils/       # Utility functions
+│   └── host/        # Peer (self) struct
 └── pkg/             # Exportable items
-    ├── crypto/      # Cryptography-related
-    ├── protocol/    # Protocol-related
     └── types/       # Structs and types
 
 ```
-
