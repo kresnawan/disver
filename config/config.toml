@@ -1,0 +1,7 @@
+[node]
+port = 3001
+name = "node_name"
+
+bootnodes = [
+    "127.0.0.1:3000",
+]

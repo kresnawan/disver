@@ -2,6 +2,7 @@ package host
 
 import (
 	"disver/internal/crypto"
+	"disver/internal/host/config"
 	"disver/pkg/types"
 	"encoding/json"
 	"fmt"
@@ -19,6 +20,7 @@ type Host struct {
 	Rt         types.RoutingTable
 	UDPConn    *net.UDPConn
 	TCPConn    *net.TCPConn
+	Config     config.Config
 }
 
 func (p *Host) GetPeers() {
@@ -39,6 +41,16 @@ func (p *Host) StartListening() {
 	}
 
 	p.UDPConn = ln
+
+	/* Read for config */
+	config, err := config.LoadConfig()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	p.Config = *config
+
+	log.Printf("Config loaded. name: %s", p.Config.Node.Name)
 
 	/* Generating self ID by public key */
 	id := crypto.GenerateNodeId()
