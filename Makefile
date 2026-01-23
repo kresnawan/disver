@@ -1,20 +1,23 @@
-RUST_DIR=internal/crypto/rust
+RUST_DIR=internal/crypto_rust
 RUST_LIB=$(RUST_DIR)/target/release/libcrypto_rust.a
-BINARY_NAME=disver
+BINARY_DIR=./cmd/build/disver
 
 all: build
 
 $(RUST_LIB): $(shell find $(RUST_DIR)/src -type f -name "*.rs")
 	@echo "Building Rust library..."
+	rm -f $(BINARY_DIR)
+	cd $(RUST_DIR) && cargo clean
 	cd $(RUST_DIR) && cargo build --release
 
 build: $(RUST_LIB)
-	@echo "Building Go node..."
-	go build -o $(BINARY_NAME) cmd/node/main.go
+	@echo "Building Go binary..."
+	go build -o $(BINARY_DIR) ./cmd/node
 
 run: build
-	./$(BINARY_NAME)
+	@echo ""
+	@$(BINARY_DIR)
 
 clean:
-	rm -f $(BINARY_NAME)
+	rm -f $(BINARY_DIR)
 	cd $(RUST_DIR) && cargo clean
